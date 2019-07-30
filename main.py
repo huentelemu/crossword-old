@@ -40,7 +40,11 @@ unique_crossings['crossing_id'] = np.arange(unique_crossings.shape[0],
 
 crosswords = {0: []}
 for word_index, word in enumerate(words):
-    cw = Crossword(word, [word_index])
+    one_word_cw = word.copy()
+    one_word_cw['horizontal'] = True
+    one_word_cw['x'] = 0
+    one_word_cw['y'] = np.arange(word.shape[0])
+    cw = Crossword(one_word_cw, [word_index])
     crosswords[0] += [cw]
 
 for layer in range(1, len(words)):

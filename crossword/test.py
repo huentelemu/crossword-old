@@ -49,9 +49,10 @@ class Crossword:
 
         # Prepare possible crossings
         possible_crossings = pd.merge(self.current, new_word, how='inner',
-                                on='letter', suffixes=('_current', '_new'))
+                                      on='letter', suffixes=('_current', '_new'))
 
         # Iterate over possible crossings
+        print(new_word)
         print(possible_crossings)
         for i, crossing in possible_crossings.iterrows():
 
@@ -71,9 +72,7 @@ class Crossword:
                 row_df['word_index_second'] = crossing['word_index_current']
                 row_df['letter_index_second'] = crossing['letter_index_current']
             row_df = pd.DataFrame(row_df).T
-            #print(i)
-            #print(crossing)
-            #print(row_df)
+
             crossing_id = pd.merge(unique_crossings, row_df,
                                    how='inner', on=on)['crossing_id'].iloc[0]
 
@@ -87,4 +86,26 @@ class Crossword:
                 pre_existent_child.parents += [self]
                 continue
 
+            # Create new word
+            len_word = new_word.shape[0]
+            nw = new_word.copy()
+            if crossing.horizontal:
+                fix_axis = 'x'
+                along_axis = 'y'
+                nw['horizontal'] = False
+            else:
+                fix_axis = 'y'
+                along_axis = 'x'
+                nw['horizontal'] = True
+            nw[fix_axis] = crossing[fix_axis]
+            start_word = crossing[along_axis] - crossing.letter_index_new
+            nw[along_axis] = np.arange(start_word, start_word+len_word)
+            print(nw)
+
             # Check if crossing is legit
+            #new_cw =
+
+
+            break
+
+

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+import matplotlib.pyplot as plt
 
 class Test:
     def __init__(self, value):
@@ -39,15 +40,28 @@ class Crossword:
                          'word_index_new', 'letter_index_new']
         self.right_on_inverse = ['word_index_new', 'letter_index_new',
                                  'word_index_current', 'letter_index_current']
-    #def check_legit_crossing(self, current):
+        self.height = self.current.y.max() - self.current.y.min() + 1
+        self.width = self.current.x.max() - self.current.x.min() + 1
+        self.area = self.height * self.width
+
+    def print_crossword(self):
+        shifted_current = self.current.copy()
+        shifted_current['x'] -= shifted_current['x'].min()
+        shifted_current['y'] -= shifted_current['y'].min()
+        matrix_cw = np.zeros((shifted_current.y.max()+1, shifted_current.x.max()+1), dtype=str)
+        matrix_cw[:] = '-'
+        for i, row in shifted_current.iterrows():
+            matrix_cw[row.y, row.x] = row.letter
+        for i in range(matrix_cw.shape[0]):
+            print(''.join(matrix_cw[i, :]))
 
     def is_child_already_in_gen(self, crossing_id, generation):
-        child_id = self.crossing_ids + crossing_id
+        child_id = sorted(self.crossing_ids + crossing_id)
         for i, sibling in enumerate(generation):
             if len(sibling.crossing_ids) == len(child_id):
-                if set(sibling.crossing_ids) == set(child_id):
-                    return generation[i]
-        return None
+                if sibling.crossing_ids == child_id:
+                    return generation[i], None
+        return None, child_id
 
     def spawn(self, new_word, word_index, unique_crossings, generation):
         if word_index in self.word_indexes:
@@ -55,7 +69,8 @@ class Crossword:
 
         new_children = []
         # Prepare possible crossings
-        possible_crossings = pd.merge(self.current, new_word, how='inner',
+        possible_crossings = pd.merge(self.current.loc[self.current['available_for_crossing']],
+                                      new_word, how='inner',
                                       on='letter', suffixes=('_current', '_new'))
 
         # Figure out start coordinates of the new word in each crossing
@@ -90,8 +105,7 @@ class Crossword:
 
             # Check if possible child crossing id is already in generation
             crossing_ids = crossing_df['crossing_id'].tolist()
-            pre_existent_child = self.is_child_already_in_gen(crossing_ids,
-                                                              generation)
+            pre_existent_child, child_id = self.is_child_already_in_gen(crossing_ids, generation)
             if pre_existent_child:
                 # If so, add child to this node children,
                 self.children += [pre_existent_child]
@@ -129,7 +143,8 @@ class Crossword:
 
             # Merge forbidden area to current crossword to check if word fits
             forbidden_area = pd.DataFrame(forbidden_area_dict)
-            n_forbidden_contacts = pd.merge(self.current, forbidden_area).shape[0]
+            n_forbidden_contacts = pd.merge(self.current,
+                                            forbidden_area).shape[0]
 
             if n_forbidden_contacts > 0:
                 # Word doesn't fit like this, so we just continue with the next position
@@ -137,15 +152,15 @@ class Crossword:
 
             # We are ready to spawn a new child crossword with the new word
             new_crossword = self.current.copy()
+            inserted_new_word['available_for_crossing'] = True
             new_crossword = new_crossword.append(inserted_new_word, sort=False)
 
             # Erase the letters involved in the current crossing
             crossing_letters = np.logical_and(new_crossword.x.isin(crossing_df.x),
                                               new_crossword.y.isin(crossing_df.y))
-            new_crossword = new_crossword.loc[~crossing_letters]
+            new_crossword.loc[crossing_letters, 'available_for_crossing'] = False
 
             # Create child
-            child_id = self.crossing_ids + crossing_ids
             child_word_indexes = self.word_indexes + [word_index]
             new_child = Crossword(new_crossword, child_word_indexes, child_id)
 

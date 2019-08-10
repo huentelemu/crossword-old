@@ -1,16 +1,18 @@
-from crossword.test import Crossword
+from crossword.crossword import Crossword
 
 import pandas as pd
 import numpy as np
 from copy import copy
 from time import perf_counter
+import matplotlib.pyplot as plt
 
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 200)
 
+#original_words = sorted(['ABBBBB', 'ACCCCD', 'DEEEEE'])
 original_words = sorted(['MAMA', 'PAPA', 'ABUELA', 'PERRO'])
-#original_words = sorted(['AMA','AMA','AMA'])
+#original_words = sorted(['AMA', 'AMA', 'AMA', 'AMA'])
 #original_words = ['DRAMA',
 #         'DESOCUPAR',
 #         'PENALIDAD',
@@ -73,6 +75,7 @@ for word_index, word in enumerate(words):
     one_word_cw['horizontal'] = True
     one_word_cw['x'] = np.arange(word.shape[0])
     one_word_cw['y'] = 0
+    one_word_cw['available_for_crossing'] = True
     cw = Crossword(one_word_cw, [word_index])
     crosswords[0] += [cw]
 
@@ -106,3 +109,22 @@ for layer in range(1, len(words)):
 
 print('')
 print('Total time: '+str(perf_counter()-init_total))
+
+minimum_area = 100000000
+minimum_area_index = -1
+for i, cw in enumerate(crosswords[len(original_words)-1]):
+    if cw.area < minimum_area:
+        minimum_area_index = i
+        minimum_area = cw.area
+    #print(i)
+    #print(cw.crossing_ids)
+    #cw.print_crossword()
+    #print(cw.area)
+    #print('')
+
+best_cw = crosswords[len(original_words)-1][minimum_area_index]
+print('Best crossword:')
+print(minimum_area_index)
+print(best_cw.crossing_ids)
+best_cw.print_crossword()
+print(best_cw.area)

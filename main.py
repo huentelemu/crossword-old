@@ -39,6 +39,7 @@ original_words = sorted(['MAMA', 'PAPA', 'ABUELA', 'PERRO'])
 #         'DOCUMENTO',
 #         ]
 
+# Words to DataFrames
 words = []
 for i, word in enumerate(original_words):
     word_df = pd.DataFrame()
@@ -48,10 +49,9 @@ for i, word in enumerate(original_words):
         row['letter_index'] = j
         word_df = word_df.append(row, ignore_index=True)
     word_df['word_index'] = i
-    #word_df['word'] = word
     word_df.letter_index = word_df.letter_index.astype(int)
     words += [word_df]
-#print(words)
+total_words = pd.concat(words)
 
 
 # Unique id crossings stored in a dataframe
@@ -90,6 +90,75 @@ for layer in range(1, len(words)):
     generation = []
 
     # Reproduce parents
+    for parent_cw in crosswords[layer - 1]:
+
+        # Get possible new children from parent
+        possible_crossings = parent_cw.get_possible_crossings(total_words)
+
+        # Group crossings by similar possible insertions of words
+        # Return possible crossings as a Groupby object
+        grouped_crossings = possible_crossings.groupby(['new_word_start_x',
+                                                        'new_word_start_y',
+                                                        'new_word_horizontal',
+                                                        'word_index_new'])
+
+        # Iterate over possible children
+        for new_word_coordinates, group in grouped_crossings:
+
+            # Get Ids of specific crossing
+            child_id, crossing_df = parent_cw.identify_crossing(group, unique_crossings)
+
+            # Check if Id match with an already existent child
+            pre_existent_child = None
+            for sibling_index, sibling in enumerate(generation):
+                if len(sibling.crossing_ids) == len(child_id):
+                    if sibling.crossing_ids == child_id:
+
+                        # The child already exists
+                        pre_existent_child = generation[sibling_index]
+                        break
+
+            if pre_existent_child:
+
+                # If child already exists, add it as one of the parent's children
+                parent_cw.children += [pre_existent_child]
+
+                # And add the parent as one of the parents of the children node
+                pre_existent_child.parents += [parent_cw]
+
+                # Continue with next possible crossing
+                continue
+
+            # Check if crossing is legal
+            new_word_start_x = new_word_coordinates[0]
+            new_word_start_y = new_word_coordinates[1]
+            new_word_horizontal = new_word_coordinates[2]
+            word_index = new_word_coordinates[3]
+            new_word = words[word_index]
+            new_word_legal, inserted_new_word = parent_cw.is_crossing_legal(new_word, crossing_df,
+                                                                            new_word_start_x,
+                                                                            new_word_start_y,
+                                                                            new_word_horizontal)
+
+            # If the word didn't fit, we just ignore and continue with the next crossing
+            if not new_word_legal:
+                continue
+
+            # Create a new child from the parent and the new inserted word
+            new_child = parent_cw.spawn_child(inserted_new_word, crossing_df,
+                                              child_id, word_index)
+
+            # Assign family to child
+            parent_cw.children += [new_child]
+            new_child.parents += [parent_cw]
+
+            # Add child to current generation
+            generation += [new_child]
+
+
+
+    '''
+    # Reproduce parents
     for parent_cw in crosswords[layer-1]:
         for word_index, word in enumerate(words):
             children = parent_cw.spawn(word, word_index,
@@ -98,7 +167,8 @@ for layer in range(1, len(words)):
             if children is None:
                 continue
 
-            generation += children
+            generation += children'''
+
 
     # Save the current generation
     crosswords[layer] = copy(generation)
@@ -128,3 +198,5 @@ print(minimum_area_index)
 print(best_cw.crossing_ids)
 best_cw.print_crossword()
 print(best_cw.area)
+
+print(type(crosswords[0][0]))

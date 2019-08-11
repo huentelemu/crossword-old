@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from crossword.crossword import Crossword
 from random import shuffle
@@ -35,7 +36,8 @@ class TreeNode:
                 self.children.append(node)
 
             self.layers[1] = self.children
-            self.n_visits = 1
+            self.parents = []
+            self.n_visits = 2
             self.leaf = False
 
         else:
@@ -49,6 +51,9 @@ class TreeNode:
             self.children = []
             self.n_visits = 0
             self.leaf = True
+
+        self.infinite_score = 100000000000
+        self.value = 0
 
     def expand_all(self):
         """
@@ -85,6 +90,86 @@ class TreeNode:
             print(best_cw.crossing_ids)
             best_cw.print_crossword()
             print(best_cw.area)
+
+    def monte_carlo_iteration(self, ln_total_visits=None,
+                              ubc1_constant=2,
+                              n_visits_for_expansion=1):
+        """
+        Execute the 4 steps of a classical MCTS iteration
+        :return:
+        """
+
+        # If this is the root node, derive total visits for nodes below
+        if self.layer == 0:
+            ln_total_visits = np.log(self.n_visits)
+
+        # Selection
+        # Traverse the tree until reaching a leaf node
+        if not self.leaf:
+
+            # Select best child node by UBC1 score
+            best_child_score = 0
+            best_child_index = -1
+            for child_index, child in enumerate(self.children):
+                child_score = child.get_ubc1_score(ln_total_visits, ubc1_constant)
+                if child_score >= best_child_score:
+                    best_child_score = child_score
+                    best_child_index = child_index
+
+            # Continue iteration in best child node
+            self.children[best_child_index].monte_carlo_iteration(ln_total_visits=ln_total_visits)
+            return
+
+        # We are in a leaf node. Expand if it's time for that
+        if self.n_visits == n_visits_for_expansion:
+            self.expand()
+
+            # Rollout one of the children
+            rollout_crossword = self.children[0].rollout()
+            rollout_value = self.get_value_from_crossword(rollout_crossword)
+            self.children[0].backpropagate_value(rollout_value)
+        else:
+            # Let's make a rollout from this node then
+            rollout_crossword = self.rollout()
+            rollout_value = self.get_value_from_crossword(rollout_crossword)
+            self.backpropagate_value(rollout_value)
+
+    def backpropagate_value(self, rollout_value):
+        """
+        Propagate value found rollout value to parent nodes
+        :param rollout_value:
+        :return:
+        """
+
+        # Update self values
+        self.value += rollout_value
+        self.n_visits += 1
+
+        # Propagate to all parent nodes
+        for parent in self.parents:
+            parent.backpropagate_value(rollout_value)
+
+    def get_value_from_crossword(self, rollout_crossword):
+        """
+        Define value of a crossword
+        :return:
+        """
+        return 100/rollout_crossword.area
+
+    def get_ubc1_score(self, ln_total_visits, ubc1_constant):
+        """
+        UBC1 score
+        :param ln_total_visits:
+        :param ubc1_constant
+        :return:
+        """
+
+        # If we haven't had visitors, then return a 'infinite' score
+        if self.n_visits == 0:
+            return self.infinite_score
+
+        mean_value = self.value/self.n_visits
+        return mean_value + ubc1_constant * np.sqrt(ln_total_visits/self.n_visits)
 
     def expand(self):
         """

@@ -9,14 +9,15 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 200)
 
 #original_words = sorted(['ABBBBB', 'ACCCCD', 'DEEEEE'])
-#original_words = sorted(['MAMA', 'PAPA', 'ABUELA', 'PERRO'])
+original_words = sorted(['MAMA', 'PAPA', 'ABUELA', 'PERRO'])
 #original_words = sorted(['AMA', 'AMA', 'AMA', 'AMA'])
-original_words = sorted(['DRAMA', 'DESOCUPAR', 'PENALIDAD', 'CARGO', 'INVADIR',
-                        'PROFESION', 'LIBERAR', 'OCUPACION', 'ADUENARSE',
-                        'COMUNICADO', 'APROPIARSE', 'INSTALARSE', 'QUEHACER',
-                        'TRABAJO', 'DESHABITAR', 'INVASION', 'VIVIR', 'EMPLEO',
-                        'DEDICARSE', 'FUNCION', 'HABITAR', 'TRAGEDIA',
-                        'ASALTO', 'DOCUMENTO'])
+#original_words = sorted(['DRAMA', 'DESOCUPAR', 'PENALIDAD', 'CARGO', 'INVADIR',
+#                        'PROFESION', 'LIBERAR', 'OCUPACION', 'ADUENARSE',
+#                        'COMUNICADO', 'APROPIARSE', 'INSTALARSE', 'QUEHACER',
+#                        'TRABAJO', 'DESHABITAR', 'INVASION',
+#                       'VIVIR', 'EMPLEO', 'DEDICARSE', 'FUNCION', 'HABITAR', 'TRAGEDIA',
+#                        'ASALTO', 'DOCUMENTO',
+#                         ])
 
 # Words to DataFrames
 words = []
@@ -48,9 +49,13 @@ print(unique_crossings)
 
 init_total = perf_counter()
 tree_root = TreeNode(words=words, unique_crossings=unique_crossings)
-#tree_root.expand_all()
-for i in range(1):
-    cw = tree_root.layers[1][0].rollout()
-    cw.print_crossword()
+for i in range(100):
+    init = perf_counter()
+    tree_root.monte_carlo_iteration()
+    print('Time: ' + str(perf_counter()-init))
+    print('n_visits: ' + str(tree_root.n_visits))
+    print('Layers: ' + str([len(layer) for layer in tree_root.context['layers']]))
+    #print(tree_root.value)
     print('')
+
 print('Total time: ' + str(perf_counter()-init_total))

@@ -1,4 +1,5 @@
 from crossword.crossword import Crossword
+from crossword.MCTS import TreeNode
 
 import pandas as pd
 import numpy as np
@@ -11,7 +12,7 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 200)
 
 #original_words = sorted(['ABBBBB', 'ACCCCD', 'DEEEEE'])
-original_words = sorted(['MAMA', 'PAPA', 'ABUELA', 'PERRO'])
+original_words = sorted(['MAMA', 'PAPA', 'ABUELA', 'PERRO', 'GATO'])
 #original_words = sorted(['AMA', 'AMA', 'AMA', 'AMA'])
 #original_words = ['DRAMA',
 #         'DESOCUPAR',
@@ -199,4 +200,33 @@ print(best_cw.crossing_ids)
 best_cw.print_crossword()
 print(best_cw.area)
 
-print(type(crosswords[0][0]))
+# Test with MCTS
+print('*** Test with MCTS ***')
+print('')
+
+init = perf_counter()
+tree_root = TreeNode(words=words, unique_crossings=unique_crossings)
+tree_root.expand_all()
+print('Total time: ' + str(perf_counter()-init))
+
+layers = tree_root.context['layers']
+for l, layer in enumerate(layers):
+    print('')
+    print('Layer: ' + str(l))
+    print('Number of crosswords in generation: ' + str(len(layer)))
+    print('')
+
+minimum_area = 100000000
+minimum_area_index = -1
+for i, node in enumerate(layers[-1]):
+    if node.crossword.area < minimum_area:
+        minimum_area_index = i
+        minimum_area = node.crossword.area
+
+best_cw = layers[-1][minimum_area_index].crossword
+print('Best crossword:')
+print(minimum_area_index)
+print(best_cw.crossing_ids)
+best_cw.print_crossword()
+print(best_cw.area)
+

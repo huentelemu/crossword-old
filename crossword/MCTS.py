@@ -1,6 +1,8 @@
-import numpy as np
 import pandas as pd
 from crossword.crossword import Crossword
+from random import shuffle
+from copy import copy
+
 
 class TreeNode:
 
@@ -8,8 +10,7 @@ class TreeNode:
                  cw=None, layer=None, parents=None, context=None):
         if words:
 
-            ## Creation of root of tree
-
+            # Creation of root of tree
             # Create pointer to layers and put myself on the first layer
             self.layers = [[] for _ in range(len(words)+1)]
             self.layers[0].append(self)
@@ -62,6 +63,28 @@ class TreeNode:
         # Then we proceed to expand the children
         for child in self.children:
             child.expand_all()
+
+        # If I'm the root node, print results of this exhaustive search
+        if self.layer == 0:
+            layers = self.context['layers']
+            for l, layer in enumerate(layers):
+                print('Layer: ' + str(l))
+                print('Number of crosswords in generation: ' + str(len(layer)))
+                print('')
+
+            minimum_area = 100000000
+            minimum_area_index = -1
+            for i, node in enumerate(layers[-1]):
+                if node.crossword.area < minimum_area:
+                    minimum_area_index = i
+                    minimum_area = node.crossword.area
+
+            best_cw = layers[-1][minimum_area_index].crossword
+            print('Best crossword:')
+            print(minimum_area_index)
+            print(best_cw.crossing_ids)
+            best_cw.print_crossword()
+            print(best_cw.area)
 
     def expand(self):
         """
@@ -139,3 +162,78 @@ class TreeNode:
 
         # With child nodes, this is no longer a leaf node
         self.leaf = False
+
+    def rollout(self, n_tryouts=5):
+        """
+        Perform a rollout from current node
+        :return:
+        """
+
+        words = self.context['words'][:]
+        shuffle(words)
+
+        # Crossword to simulate to completion
+        crossword = copy(self.crossword)
+
+        for tryout in range(n_tryouts):
+
+            left_out_words = []
+
+            for _, word in enumerate(words):
+
+                # If word is already in crossword, ignore and continue with the rest
+                word_index = word.word_index.iloc[0]
+                if word_index in crossword.word_indexes:
+                    continue
+
+                # Get possible new children from just one word
+                possible_crossings = crossword.get_possible_crossings(word)
+
+                # If there were no crossings, save current word as a left out
+                # and continue with the rest
+                if possible_crossings.shape[0] == 0:
+                    left_out_words.append(word)
+                    continue
+
+                # Group crossings by similar possible insertions of words
+                # Return possible crossings as a Groupby object
+                grouped_crossings = possible_crossings.groupby(['new_word_start_x',
+                                                                'new_word_start_y',
+                                                                'new_word_horizontal',
+                                                                ])
+
+                # Iterate over possible crossings
+                word_fit = False
+                for new_word_coordinates, group in grouped_crossings:
+
+                    # Check if crossing is legal
+                    new_word_legal, inserted_new_word = crossword.is_crossing_legal(word, group,
+                                                                                    new_word_coordinates[0],
+                                                                                    new_word_coordinates[1],
+                                                                                    new_word_coordinates[2])
+
+                    # If the word didn't fit like this, we try with the next possible crossing
+                    if not new_word_legal:
+                        continue
+
+                    # Create a new child from the parent and the new inserted word
+                    crossword = crossword.spawn_child(inserted_new_word, group,
+                                                      [-1], word_index)
+
+                    word_fit = True
+                    break
+
+                # If word didn't fit, save word as a left out and continue with the rest
+                if not word_fit:
+                    left_out_words.append(word)
+
+            # If there were left out words, we make another try if we have tryouts left
+            if len(left_out_words) > 0:
+                print('Retrying fit: ' + str(tryout))
+                words = left_out_words[:]
+                shuffle(words)
+            else:
+                break
+
+        return crossword
+

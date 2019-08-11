@@ -119,9 +119,7 @@ class Crossword:
 
         return crossing_ids, crossing_df
 
-    def is_crossing_legal(self, new_word, crossing_df, new_word_start_x,
-                                                       new_word_start_y,
-                                                       new_word_horizontal):
+    def is_crossing_legal(self, new_word, crossing_df, new_word_start_x, new_word_start_y, new_word_horizontal):
 
         # This is a new position to explore then, let's create a new word
         inserted_new_word = new_word.copy()
@@ -176,6 +174,7 @@ class Crossword:
 
         # Create child
         child_word_indexes = self.word_indexes + [word_index]
+
         return Crossword(new_crossword, child_word_indexes, child_id)
 
     def spawn(self, new_word, word_index, unique_crossings, generation):

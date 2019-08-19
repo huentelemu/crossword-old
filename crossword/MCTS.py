@@ -104,19 +104,21 @@ class TreeNode:
                     self.defunct = True
                     for child in self.children:
                         child.apoptosis(self.name, from_child=False)
-                    self.parents = []
+                    self.children = []
         else:
             # This is the node dying right now
             self.defunct = True
 
-            # Send message to parents and then forget them
-            for parent in self.parents:
-                parent.apoptosis(self.name, from_child=True)
-            self.parents = []
+            if from_child:
+                # Send message to parents and then forget them
+                for parent in self.parents:
+                    parent.apoptosis(self.name, from_child=True)
 
-            # Send message to children and then forget them
-            for child in self.children:
-                child.apoptosis(self.name, from_child=False)
+            else:
+                # Send message to children and then forget them
+                for child in self.children:
+                    child.apoptosis(self.name, from_child=False)
+            self.parents = []
             self.children = []
 
     def expand_all(self):
@@ -212,6 +214,10 @@ class TreeNode:
         :param rollout_value:
         :return:
         """
+
+        # If parent is already dead then stop the backpropagation
+        if self.defunct:
+            return
 
         # Update self values
         self.value += rollout_value

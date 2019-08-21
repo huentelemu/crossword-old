@@ -23,8 +23,8 @@ class TreeNode:
                 'total_words': pd.concat(words),
                 'unique_crossings': unique_crossings,
                 'layers': self.layers,
-                'best_value': 0,
-                'best_crossword': None
+                'best_area': [10000000000]*len(words),
+                'best_crossword': [None]*len(words)
             }
 
             # Automatically expand to crosswords with one word
@@ -229,20 +229,26 @@ class TreeNode:
 
     def get_value_from_crossword(self, rollout_crossword):
         """
-        Define value of a crossword, check if it's the best socre so far, then return it
+        Define value of a crossword, check if it's the best score so far, then return it
         :return:
         """
         value = 100/rollout_crossword.area
-        if value > self.context['best_value']:
-            self.context['best_value'] = value
-            self.context['best_crossword'] = rollout_crossword
-            # Print this new best crossword
-            print('')
-            print('New best crossword:')
-            self.context['best_crossword'].print_crossword()
-            print('')
+        self.register_crossword(rollout_crossword)
 
         return value
+
+    def register_crossword(self, crossword):
+        """
+        Store crossword if it's the crossword with the lest area for its number of words
+        :param crossword:
+        :return:
+        """
+
+        n_words = len(crossword.word_indexes)
+        if crossword.area < self.context['best_area'][n_words-1]:
+            self.context['best_area'][n_words - 1] = crossword.area
+            self.context['best_crossword'][n_words - 1] = crossword
+
 
     def get_ubc1_score(self, ln_total_visits, ubc1_constant):
         """
@@ -326,6 +332,9 @@ class TreeNode:
             new_child_cw = self.crossword.spawn_child(inserted_new_word, crossing_df,
                                                       child_id, word_index)
 
+            # Register crossword just in case
+            self.register_crossword(new_child_cw)
+
             # Put crossword on its own tree node
             new_child = TreeNode(cw=new_child_cw,
                                  layer=self.layer+1,
@@ -405,6 +414,9 @@ class TreeNode:
                     # Create a new child from the parent and the new inserted word
                     crossword = crossword.spawn_child(inserted_new_word, group,
                                                       [-1], word_index)
+
+                    # Register new crossword
+                    self.register_crossword(crossword)
 
                     word_fit = True
                     break

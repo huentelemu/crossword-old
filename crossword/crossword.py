@@ -1,31 +1,6 @@
 import pandas as pd
 import numpy as np
 
-import matplotlib.pyplot as plt
-
-class Test:
-    def __init__(self, value):
-        self.value = value
-        self.parents = []
-        self.children = []
-
-    def spawn(self):
-        new_one = Test(self.value+1)
-        new_one.parents += [self]
-        self.children += [new_one]
-        return new_one
-
-    def print_parents_values(self):
-        print('parents value: ')
-        for parent in self.parents:
-            print(parent.value)
-
-    def print_children_values(self):
-        print('children value: ')
-        for child in self.children:
-            print(child.value)
-
-
 class Crossword:
 
     def __init__(self, current, word_indexes, crossing_ids=[]):
@@ -57,8 +32,13 @@ class Crossword:
         matrix_cw[:] = '-'
         for i, row in shifted_current.iterrows():
             matrix_cw[row.y, row.x] = row.letter
+
+        print('')
+        print('Best for '+str(len(self.word_indexes))+' words')
+        print('Area: '+str(self.height)+' x '+str(self.width)+' = '+str(self.area))
         for i in range(matrix_cw.shape[0]):
             print(''.join(matrix_cw[i, :]))
+        print('')
 
     def is_child_already_in_gen(self, crossing_id, generation):
         child_id = sorted(self.crossing_ids + crossing_id)

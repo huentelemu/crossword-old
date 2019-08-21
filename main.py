@@ -108,8 +108,10 @@ for i in range(len(words)):
     print('')
 
 print('Total time: ' + str(perf_counter()-init_total))
-print('Best crossword: ')
-tree_root.context['best_crossword'].print_crossword()
+print('Best crosswords: ')
+for cw in tree_root.context['best_crossword']:
+    if cw:
+        cw.print_crossword()
 
 #for layer in tree_root.context['layers']:
 #    for node in layer:

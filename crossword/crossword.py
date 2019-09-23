@@ -24,6 +24,22 @@ class Crossword:
         self.width = self.current.x.max() - self.current.x.min() + 1
         self.area = self.height * self.width
 
+    @staticmethod
+    def get_unique_crossings(words):
+        # Unique id crossings stored in a dataframe
+        unique_crossings = pd.DataFrame()
+
+        for i in range(len(words)):
+            for j in range(i + 1, len(words)):
+                cross = pd.merge(words[i], words[j], how='inner', on='letter',
+                                 suffixes=('_first', '_second'))
+                unique_crossings = unique_crossings.append(cross)
+        unique_crossings['crossing_id'] = np.arange(unique_crossings.shape[0],
+                                                    dtype=int)
+
+        return unique_crossings
+
+
     def print_crossword(self):
         shifted_current = self.current.copy()
         shifted_current['x'] -= shifted_current['x'].min()

@@ -1,0 +1,46 @@
+Resumen:
+
+Grupo 1: 10 Sopas de 12 Palabras de 5 a 10 letras cada una
+
+
+
+* * * * * Grupo 1:
+* * * * * Numero de Sopas: 2
+* * * * * Palabras por Sopa: 12
+* * * * * Largo Minimo de Palabras: 5
+* * * * * Largo Maximo de Palabras: 10
+
+
+
+* * * Grupo 1  --  Sopa 1:
+
+CÉNTIMO
+ADUEÑARSE
+ESCRITO
+OCUPAR
+SIGUIENTES
+ATENDER
+METERSE
+EDUCARSE
+CEDER
+VACIAR
+PONIENTE
+ASALTAR
+
+
+* * * Grupo 1  --  Sopa 2:
+
+OCCIDENTE
+OCHAVO
+INVADIR
+PROFESIÓN
+CARGO
+APROPIAR
+ANALIZAR
+FORMARSE
+ACOMETIDA
+APRENDER
+COLOCARSE
+ACECHAR
+
+

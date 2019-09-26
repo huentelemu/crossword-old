@@ -1,0 +1,2 @@
+numero_inicial_palabras=4
+minutos_por_cruzada=3

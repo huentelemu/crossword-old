@@ -39,7 +39,6 @@ class Crossword:
 
         return unique_crossings
 
-
     def print_crossword(self):
         shifted_current = self.current.copy()
         shifted_current['x'] -= shifted_current['x'].min()
@@ -47,7 +46,7 @@ class Crossword:
         matrix_cw = np.zeros((shifted_current.y.max()+1, shifted_current.x.max()+1), dtype=str)
         matrix_cw[:] = '-'
         for i, row in shifted_current.iterrows():
-            matrix_cw[row.y, row.x] = row.letter
+            matrix_cw[row.y, row.x] = chr(int(row.letter))
 
         print('')
         print('Best for '+str(len(self.word_indexes))+' words')

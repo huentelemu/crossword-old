@@ -232,7 +232,7 @@ class TreeNode:
         Define value of a crossword, check if it's the best score so far, then return it
         :return:
         """
-        value = 100/rollout_crossword.area
+        value = 100 / (max(rollout_crossword.width, rollout_crossword.height)**2)
         self.register_crossword(rollout_crossword)
 
         return value

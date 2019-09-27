@@ -117,6 +117,12 @@ class Waton:
             shift_cw = crossword.current.copy()
             shift_cw['x'] -= shift_cw['x'].min()
             shift_cw['y'] -= shift_cw['y'].min()
+            # If crossword is horizontal, swap it to vertical
+            if shift_cw.y.max() < shift_cw.x.max():
+                shift_cw['place_holder_x'] = shift_cw['x']
+                shift_cw['x'] = shift_cw['y']
+                shift_cw['y'] = shift_cw['place_holder_x']
+                shift_cw['horizontal'] = np.logical_not(shift_cw['horizontal'])
             matrix_cw = np.zeros((n_versions+1, shift_cw.y.max() + 1, shift_cw.x.max() + 1), dtype=str)
             matrix_cw[0, :] = '-'
             matrix_cw[1:, :] = '?'
